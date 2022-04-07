@@ -24,6 +24,7 @@ class Breakthrough():
         self.__CurrentLock = Lock()
         self.__LockSolved = False
         self.__PeekUsed = False
+        self.__MulliganUsed = False
         self.__LoadLocks()
 
     def PlayGame(self):
@@ -52,8 +53,6 @@ class Breakthrough():
                         elif DiscardOrPlay == "P":
                             self.__PlayCardToSequence(CardChoice)
                     elif MenuChoice == "P":
-
-                        # If peek not used, then peek
                         if not self.__PeekUsed:
                             self.__PeekUsed = True
                             print("\nPeeked Deck: ")
@@ -64,6 +63,30 @@ class Breakthrough():
 
                         else:
                             print("\nPeek already used on this lock.\n")
+
+                    elif MenuChoice == "M":
+
+                        if not self.__MulliganUsed:
+                            # Reset Card Collections
+                            self.__MulliganUsed = True
+                            self.__Deck = CardCollection("DECK")
+                            self.__Hand = CardCollection("HAND")
+                            self.__Sequence = CardCollection("SEQUENCE")
+                            self.__Discard = CardCollection("DISCARD")
+                            # Create deck without difficulties
+                            self.__CreateStandardDeck()
+                            self.__Deck.Shuffle()
+                            # Deal cards to player
+                            for Count in range(5):
+                                self.__MoveCard(self.__Deck, self.__Hand,
+                                                self.__Deck.GetCardNumberAt(0))
+                            # Add difficulties to pack
+                            self.__AddDifficultyCardsToDeck()
+                            # Reshuffle
+                            self.__Deck.Shuffle()
+
+                        else:
+                            print("\nMulligan already used this game.\n")
 
                     if self.__CurrentLock.GetLockSolved():
                         self.__PeekUsed = False
@@ -273,11 +296,15 @@ class Breakthrough():
 
     def __GetChoice(self):
         print()
-        if self.__PeekUsed == False:
-            Choice = input("(D)iscard inspect, (U)se card, (P)eek Deck:> ").upper()
-        else:
-            Choice = input("(D)iscard inspect, (U)se card:> ").upper()
-        return Choice
+
+        choices = "(D)iscard inspect, (U)se card"
+        if not self.__PeekUsed:
+            choices += ", (P)eek"
+        if not self.__MulliganUsed:
+            choices += ", (M)ulligan"
+        choices += ":> "
+
+        return input(choices)
 
     def __AddDifficultyCardsToDeck(self):
         for Count in range(5):
