@@ -35,6 +35,7 @@ class Breakthrough():
                     print("Current score:", self.__Score)
                     print(self.__CurrentLock.GetLockDetails())
                     print(self.__Sequence.GetCardDisplay())
+                    print("Cards in Deck: ", self.__Deck.GetNumberOfCards())
                     print(self.__Hand.GetCardDisplay())
                     MenuChoice = self.__GetChoice()
                     if MenuChoice == "D":
