@@ -91,7 +91,7 @@ class Breakthrough():
 
                     elif MenuChoice == "Q":
                         self.__GameOver = True
-                        print("Thank you for playing!")
+                        print("\nThank you for playing!\n")
                         break # Exit current lock
 
                     if self.__CurrentLock.GetLockSolved():
@@ -256,6 +256,7 @@ class Breakthrough():
     def __GetCardFromDeck(self, CardChoice):
         if self.__Deck.GetNumberOfCards() > 0:
             if self.__Deck.GetCardDescriptionAt(0) == "Dif":
+                print(self.__Deck.DisplayStats())
                 CurrentCard = self.__Deck.RemoveCard(
                     self.__Deck.GetCardNumberAt(0))
                 print()
@@ -312,7 +313,7 @@ class Breakthrough():
             choices += ", (M)ulligan"
         choices += ", (Q)uit:> "
 
-        return input(choices)
+        return input(choices).upper()
 
     def __AddDifficultyCardsToDeck(self):
         for Count in range(5):
@@ -513,6 +514,10 @@ class CardCollection():
         self._Name = N
         self._Cards = []
 
+        self._NumPicks = 0
+        self._NumFiles = 0
+        self._NumKeys = 0
+
     def GetName(self):
         return self._Name
 
@@ -525,8 +530,39 @@ class CardCollection():
     def AddCard(self, C):
         self._Cards.append(C)
 
+        CardType = C.GetDescription()[0] # Return its type
+        if CardType == "K":
+            self._NumKeys += 1
+        elif CardType == "P":
+            self._NumPicks += 1
+        elif CardType == "F":
+            self._NumFiles += 1
+
     def GetNumberOfCards(self):
         return len(self._Cards)
+
+    def DisplayStats(self):
+
+        if self._NumPicks != 0:
+            percentPick = round((self._NumPicks / self.GetNumberOfCards()) * 100, 2)
+        else:
+            percentPick = 0
+        if self._NumFiles != 0:
+            percentFile = round((self._NumFiles / self.GetNumberOfCards()) * 100, 2)
+        else:
+            percentFile = 0
+        if self._NumKeys != 0:
+            percentKeys = round((self._NumKeys / self.GetNumberOfCards()) * 100, 2)
+        else:
+            percentKeys = 0
+
+        print(f"""
+
+There is a {percentKeys}% chance that the next card will be a key,
+a {percentFile}% chance it will be a file,
+and a {percentPick}% chance it will be a pick.
+
+                """)
 
     def Shuffle(self):
         for Count in range(10000):
@@ -544,7 +580,16 @@ class CardCollection():
                 CardToGet = self._Cards[Pos]
                 CardFound = True
                 self._Cards.pop(Pos)
+                CardType = CardToGet.GetDescription()[0] # Return its type
+                if CardType == "K":
+                    self._NumKeys -= 1
+                elif CardType == "P":
+                    self._NumPicks -= 1
+                elif CardType == "F":
+                    self._NumFiles -= 1
             Pos += 1
+
+
         return CardToGet
 
     def __CreateLineOfDashes(self, Size):
