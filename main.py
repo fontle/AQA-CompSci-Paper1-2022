@@ -107,7 +107,9 @@ class Breakthrough():
             self.__CurrentLock = self.__GetRandomLock()
 
     def __PlayCardToSequence(self, CardChoice):
+        # If seqeuence is empty
         if self.__Sequence.GetNumberOfCards() > 0:
+            # If last card is of different type
             if self.__Hand.GetCardDescriptionAt(
                     CardChoice - 1)[0] != self.__Sequence.GetCardDescriptionAt(
                         self.__Sequence.GetNumberOfCards() - 1)[0]:
@@ -115,6 +117,16 @@ class Breakthrough():
                     self.__Hand, self.__Sequence,
                     self.__Hand.GetCardNumberAt(CardChoice - 1))
                 self.__GetCardFromDeck(CardChoice)
+            else:
+                # If player tried to play same card type twice
+                print()
+                print("Cannot play the same tooltype two times in a row!")
+                print("You tried to play: ")
+                print(self.__Hand.GetCardDescriptionAt(CardChoice - 1))
+                print("On top of previous card: ")
+                print(self.__Sequence.GetCardDescriptionAt(self.__Sequence.GetNumberOfCards() - 1))
+                print()
+
         else:
             self.__Score += self.__MoveCard(
                 self.__Hand, self.__Sequence,
