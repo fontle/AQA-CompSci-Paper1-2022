@@ -32,6 +32,7 @@ class Breakthrough():
             self.__SetupGame()
             while not self.__GameOver:
                 self.__LockSolved = False
+                MenuChoice = None # Prevent unbound error
                 while not self.__LockSolved and not self.__GameOver:
                     print()
                     print("Current score:", self.__Score)
@@ -88,11 +89,18 @@ class Breakthrough():
                         else:
                             print("\nMulligan already used this game.\n")
 
+                    elif MenuChoice == "Q":
+                        self.__GameOver = True
+                        print("Thank you for playing!")
+                        break # Exit current lock
+
                     if self.__CurrentLock.GetLockSolved():
                         self.__PeekUsed = False
                         self.__LockSolved = True
                         self.__ProcessLockSolved()
-                self.__GameOver = self.__CheckIfPlayerHasLost()
+
+                if MenuChoice != "Q":
+                    self.__GameOver = self.__CheckIfPlayerHasLost()
         else:
             print("No locks in file.")
 
@@ -302,7 +310,7 @@ class Breakthrough():
             choices += ", (P)eek"
         if not self.__MulliganUsed:
             choices += ", (M)ulligan"
-        choices += ":> "
+        choices += ", (Q)uit:> "
 
         return input(choices)
 
