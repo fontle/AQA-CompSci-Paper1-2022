@@ -36,7 +36,7 @@ class Breakthrough():
                 while not self.__LockSolved and not self.__GameOver:
                     print()
                     print("Current score:", self.__Score)
-                    print(self.__CurrentLock.GetLockDetails())
+                    print(self.__CurrentLock.GetLockDetails(self.__Sequence.GetCardDescriptions()))
                     print(self.__Sequence.GetCardDisplay())
                     print("Cards in Deck: ", self.__Deck.GetNumberOfCards())
                     print(self.__Hand.GetCardDisplay())
@@ -411,15 +411,25 @@ class Lock():
         ConditionAsString += C[len(C) - 1]
         return ConditionAsString
 
-    def GetLockDetails(self):
+    def GetLockDetails(self, Sequence):
         LockDetails = "\n" + "CURRENT LOCK" + "\n" + "------------" + "\n"
         for C in self._Challenges:
+
             if C.GetMet():
                 LockDetails += "Challenge met: "
+
+            elif (len(C.GetCondition()) == 3
+                    and len(Sequence) > 1
+                    and Sequence[-2::] == C.GetCondition()[:2:]):
+
+                LockDetails += "Partially met: "
+
             else:
                 LockDetails += "Not met:       "
+
             LockDetails += self.__ConvertConditionToString(
                 C.GetCondition()) + "\n"
+
         LockDetails += "\n"
         return LockDetails
 
@@ -553,6 +563,9 @@ class CardCollection():
 
     def GetCardDescriptionAt(self, X):
         return self._Cards[X].GetDescription()
+
+    def GetCardDescriptions(self): # Had to create for task 8 to achieve partially met
+        return [card.GetDescription() for card in self._Cards]
 
     def AddCard(self, C):
         self._Cards.append(C)
