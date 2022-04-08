@@ -110,6 +110,12 @@ class Breakthrough():
         while self.__Discard.GetNumberOfCards() > 0:
             self.__MoveCard(self.__Discard, self.__Deck,
                             self.__Discard.GetCardNumberAt(0))
+
+        # Add multi-tools to deck
+        for card in ["P", "K", "F"]:
+            NewCard = ToolCard(card, "m")
+            self.__Deck.AddCard(NewCard)
+
         self.__Deck.Shuffle()
         self.__CurrentLock = self.__GetRandomLock()
 
@@ -138,8 +144,18 @@ class Breakthrough():
             self.__CurrentLock = self.__GetRandomLock()
 
     def __PlayCardToSequence(self, CardChoice):
-        # If seqeuence is empty
+
+        # If card is multi-tool
+        if self.__Hand.GetCardDescriptionAt(CardChoice - 1)[2] == "m":
+            Choice = input("You've chosen a multi-tool! Choose what type you want it to be (a), (b), (c):> ").lower()
+            if Choice not in ["a", "b", "c"]:
+                self.__PlayCardToSequence(CardChoice)
+                return
+            else:
+                self.__Hand.SetCardToolKitAt(CardChoice - 1, Choice)
+
         if self.__Sequence.GetNumberOfCards() > 0:
+
             # If last card is of different type
             if self.__Hand.GetCardDescriptionAt(
                     CardChoice - 1)[0] != self.__Sequence.GetCardDescriptionAt(
@@ -148,15 +164,16 @@ class Breakthrough():
                     self.__Hand, self.__Sequence,
                     self.__Hand.GetCardNumberAt(CardChoice - 1))
                 self.__GetCardFromDeck(CardChoice)
+
             else:
                 # If player tried to play same card type twice
-                print()
-                print("Cannot play the same tooltype two times in a row!")
-                print("You tried to play: ")
-                print(self.__Hand.GetCardDescriptionAt(CardChoice - 1))
-                print("On top of previous card: ")
-                print(self.__Sequence.GetCardDescriptionAt(self.__Sequence.GetNumberOfCards() - 1))
-                print()
+                print(
+f"""
+Cannot play the same tooltype two times in a row!
+You tried to play: {self.__Hand.GetCardDescriptionAt(CardChoice - 1)}
+On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.GetNumberOfCards() - 1)}
+"""
+                    )
 
         else:
             self.__Score += self.__MoveCard(
@@ -340,6 +357,10 @@ class Breakthrough():
             self.__Deck.AddCard(NewCard)
             NewCard = ToolCard("K", "c")
             self.__Deck.AddCard(NewCard)
+        # Add multi-tools to deck
+        for card in ["P", "K", "F"]:
+            NewCard = ToolCard(card, "m")
+            self.__Deck.AddCard(NewCard)
 
     def __MoveCard(self, FromCollection, ToCollection, CardNumber):
         Score = 0
@@ -469,6 +490,9 @@ class ToolCard(Card):
         elif self._ToolType == "P":
             self._Score = 1
 
+    def SetCardToolKit(self, ToolKit):
+        self._Kit = ToolKit
+
     def GetDescription(self):
         return self._ToolType + " " + self._Kit
 
@@ -518,6 +542,9 @@ class CardCollection():
         self._NumFiles = 0
         self._NumKeys = 0
 
+    def SetCardToolKitAt(self, pos, kit):
+        self._Cards[pos].SetCardToolKit(kit)
+
     def GetName(self):
         return self._Name
 
@@ -557,11 +584,9 @@ class CardCollection():
             percentKeys = 0
 
         print(f"""
-
 There is a {percentKeys}% chance that the next card will be a key,
 a {percentFile}% chance it will be a file,
 and a {percentPick}% chance it will be a pick.
-
                 """)
 
     def Shuffle(self):
