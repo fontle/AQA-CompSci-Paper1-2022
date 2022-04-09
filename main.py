@@ -32,6 +32,7 @@ class Breakthrough():
             self.__SetupGame()
             while not self.__GameOver:
                 self.__LockSolved = False
+                BonusCounter = 20
                 MenuChoice = None # Prevent unbound error
                 while not self.__LockSolved and not self.__GameOver:
                     print()
@@ -44,6 +45,7 @@ class Breakthrough():
                     if MenuChoice == "D":
                         print(self.__Discard.GetCardDisplay())
                     elif MenuChoice == "U":
+                        BonusCounter -= 1
                         CardChoice = self.__GetCardChoice()
                         DiscardOrPlay = self.__GetDiscardOrPlayChoice()
                         if DiscardOrPlay == "D":
@@ -94,7 +96,10 @@ class Breakthrough():
                         print("\nThank you for playing!\n")
                         break # Exit current lock
 
+
                     if self.__CurrentLock.GetLockSolved():
+                        if BonusCounter > 0:
+                            self.__Score += BonusCounter
                         self.__PeekUsed = False
                         self.__LockSolved = True
                         self.__ProcessLockSolved()
