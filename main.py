@@ -145,6 +145,7 @@ class Breakthrough():
                 self.__MoveCard(self.__Deck, self.__Hand,
                                 self.__Deck.GetCardNumberAt(0))
             self.__AddDifficultyCardsToDeck()
+            self.__AddGeniusCardToDeck()
             self.__Deck.Shuffle()
             self.__CurrentLock = self.__GetRandomLock()
 
@@ -215,6 +216,9 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                     CardNumber = int(Item[4:6])
                 if Item[0:3] == "Dif":
                     CurrentCard = DifficultyCard(CardNumber)
+                    CardCol.AddCard(CurrentCard)
+                elif Item[0:3] == "Gen":
+                    CurrentCard = GeniusCard(CardNumber)
                     CardCol.AddCard(CurrentCard)
                 else:
                     CurrentCard = ToolCard(Item[0], Item[2], CardNumber)
@@ -294,6 +298,21 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                 CurrentCard.Process(self.__Deck, self.__Discard, self.__Hand,
                                     self.__Sequence, self.__CurrentLock,
                                     Choice, CardChoice)
+            elif self.__Deck.GetCardDescriptionAt(0) == "Gen":
+                CurrentCard = self.__Deck.RemoveCard(
+                    self.__Deck.GetCardNumberAt(0))
+                print()
+                print("Genius card encountered!")
+                if input("Would you like to play the genius card? (y)es or (n)o:> ").lower() == "y":
+                    # Get lock details and enumerate challenges for user to input
+                    LockDetails = self.__CurrentLock.GetLockDetails(self.__Sequence.GetCardDescriptions()).split('\n')[3:-2:]
+                    LockDetails = [f"({i + 1}) {C}" for i, C in enumerate(LockDetails)]
+                    print('\n'.join(LockDetails))
+                    # Get users Choice of challenge to solve
+                    Choice = int(input("Choose which challenge to solve:> "))
+                    # Set chosen challenge to solved
+                    self.__CurrentLock.SetChallengeMet(Choice - 1, True)
+
         while self.__Hand.GetNumberOfCards(
         ) < 5 and self.__Deck.GetNumberOfCards() > 0:
             if self.__Deck.GetCardDescriptionAt(0) == "Dif":
@@ -301,6 +320,13 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                                 self.__Deck.GetCardNumberAt(0))
                 print(
                     "A difficulty card was discarded from the deck when refilling the hand."
+                )
+
+            if self.__Deck.GetCardDescriptionAt(0) == "Gen":
+                self.__MoveCard(self.__Deck, self.__Discard,
+                                self.__Deck.GetCardNumberAt(0))
+                print(
+                    "A Genius card was discarded from the deck when refilling the hand."
                 )
             else:
                 self.__MoveCard(self.__Deck, self.__Hand,
@@ -340,6 +366,11 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
     def __AddDifficultyCardsToDeck(self):
         for Count in range(5):
             self.__Deck.AddCard(DifficultyCard())
+
+    def __AddGeniusCardToDeck(self):
+        if random.random() < 1.25:
+            for x in range(10):
+                self.__Deck.AddCard(GeniusCard())
 
     def __CreateStandardDeck(self):
         for Count in range(5):
@@ -547,6 +578,16 @@ class DifficultyCard(Card):
             Discard.AddCard(CardToMove)
             Count += 1
 
+class GeniusCard(Card):
+    def __init__(self, *args):
+        self._CardType = "Gen"
+        if len(args) == 0:
+            super(GeniusCard, self).__init__()
+        elif len(args) == 1:
+            self._CardNumber = args[0]
+
+    def GetDescription(self):
+        return self._CardType
 
 class CardCollection():
     def __init__(self, N):
