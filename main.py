@@ -25,6 +25,7 @@ class Breakthrough():
         self.__LockSolved = False
         self.__PeekUsed = False
         self.__MulliganUsed = False
+        self.__Credits = 10
         self.__LoadLocks()
 
     def PlayGame(self):
@@ -37,6 +38,7 @@ class Breakthrough():
                 while not self.__LockSolved and not self.__GameOver:
                     print()
                     print("Current score:", self.__Score)
+                    print("Credits:", self.__Credits)
                     print(self.__CurrentLock.GetLockDetails(self.__Sequence.GetCardDescriptions()))
                     print(self.__Sequence.GetCardDisplay())
                     print("Cards in Deck: ", self.__Deck.GetNumberOfCards())
@@ -315,6 +317,40 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
 
         while self.__Hand.GetNumberOfCards(
         ) < 5 and self.__Deck.GetNumberOfCards() > 0:
+
+            if self.__Credits >= 2:
+
+                if input("Would you like to buy a tool? (y)es / (n)o :> ") == "y":
+                    Menu = [
+                            "F a", "F b", "F c",
+                            "P a", "P b", "P c",
+                            "K a", "K b", "K c"
+                            ]
+                    ToolsAvailable = self.__PrintToolsAvailable(self.__Credits >= 3)
+                    for i, T in enumerate(ToolsAvailable):
+                        if T != -1:
+                            # Only print available items
+                            Availability = self.__Deck.GetCardDescriptions().count(self.__Deck.GetCardDescriptionAt(T))
+                            print(f"({i + 1}) {Menu[i]} ({Availability} available)")
+                    print("(10) No Tool (buy nothing)")
+
+                    Choice = input("Choose what you would like to buy:> ")
+                    if Choice != "10":
+
+                        # Make sure user doesn't buy unavailable item and that user can buy item
+                        if (ToolsAvailable[int(Choice) - 1] != -1
+                                and (KeyBought := int(Choice) > 6 and self.__Credits >= 3)
+                                or (ToolBought := int(Choice) <= 6 and self.__Credits >= 2)):
+
+                            if KeyBought:
+                                self.__Credits -= 3
+                            elif ToolBought:
+                                self.__Credits -= 2
+
+                            self.__MoveCard(self.__Deck, self.__Hand,
+                                            self.__Deck.GetCardNumberAt(ToolsAvailable[int(Choice) - 1]))
+                            break # Prevent additional card added to end of deck after card bought
+
             if self.__Deck.GetCardDescriptionAt(0) == "Dif":
                 self.__MoveCard(self.__Deck, self.__Discard,
                                 self.__Deck.GetCardNumberAt(0))
@@ -322,15 +358,15 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                     "A difficulty card was discarded from the deck when refilling the hand."
                 )
 
-            if self.__Deck.GetCardDescriptionAt(0) == "Gen":
+            elif self.__Deck.GetCardDescriptionAt(0) == "Gen":
                 self.__MoveCard(self.__Deck, self.__Discard,
                                 self.__Deck.GetCardNumberAt(0))
                 print(
                     "A Genius card was discarded from the deck when refilling the hand."
                 )
             else:
-                self.__MoveCard(self.__Deck, self.__Hand,
-                                self.__Deck.GetCardNumberAt(0))
+                self.__MoveCard(self.__Deck, self.__Hand, self.__Deck.GetCardNumberAt(0))
+
         if self.__Deck.GetNumberOfCards(
         ) == 0 and self.__Hand.GetNumberOfCards() < 5:
             self.__GameOver = True
@@ -412,6 +448,27 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                 ToCollection.AddCard(CardToMove)
         return Score
 
+    def __PrintToolsAvailable(self, KeysAvailable):
+        """
+        Returns list of indexes of toolkits available.
+        If toolkit not available, index = -1
+        """
+        Menu = [
+                "F a", "F b", "F c",
+                "P a", "P b", "P c",
+                "K a", "K b", "K c"
+                ]
+
+        Indexes = []
+
+        DeckDescriptions = self.__Deck.GetCardDescriptions()
+        for ToolKit in Menu:
+            try:
+                I = DeckDescriptions.index(ToolKit)
+            except ValueError: #toolkit not in deck
+                I = -1
+            Indexes.append(I)
+        return Indexes
 
 class Challenge():
     def __init__(self):
@@ -448,6 +505,7 @@ class Lock():
         return ConditionAsString
 
     def GetLockDetails(self, Sequence):
+
         LockDetails = "\n" + "CURRENT LOCK" + "\n" + "------------" + "\n"
         for C in self._Challenges:
 
@@ -610,8 +668,11 @@ class CardCollection():
     def GetCardDescriptionAt(self, X):
         return self._Cards[X].GetDescription()
 
+    def GetNumberOfCards(self):
+        return len(self._Cards)
+
     def GetCardDescriptions(self): # Had to create for task 8 to achieve partially met
-        return [card.GetDescription() for card in self._Cards]
+        return [self.GetCardDescriptionAt(x) for x in range(self.GetNumberOfCards())]
 
     def AddCard(self, C):
         self._Cards.append(C)
@@ -624,8 +685,6 @@ class CardCollection():
         elif CardType == "F":
             self._NumFiles += 1
 
-    def GetNumberOfCards(self):
-        return len(self._Cards)
 
     def DisplayStats(self):
 
