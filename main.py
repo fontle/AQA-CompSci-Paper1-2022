@@ -204,7 +204,11 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                 SequenceAsString = ", " + SequenceAsString
             SequenceAsString = self.__Sequence.GetCardDescriptionAt(
                 Count) + SequenceAsString
-            if self.__CurrentLock.CheckIfConditionMet(SequenceAsString):
+            if (C := self.__CurrentLock.CheckIfConditionMet(SequenceAsString)) != False:
+                # Remove the last the cards of the seqeunce
+                for _ in range(C):
+                    CardToMove = self.__Sequence.GetCardNumberAt(-1)
+                    self.__MoveCard(self.__Sequence, self.__Discard, CardToMove)
                 return True
         return False
 
@@ -538,7 +542,7 @@ class Lock():
             if not C.GetMet() and Sequence == self.__ConvertConditionToString(
                     C.GetCondition()):
                 C.SetMet(True)
-                return True
+                return len(C.GetCondition())
         return False
 
     def SetChallengeMet(self, Pos, Value):
