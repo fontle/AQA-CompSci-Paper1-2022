@@ -93,6 +93,9 @@ class Breakthrough():
                         else:
                             print("\nMulligan already used this game.\n")
 
+                    elif MenuChoice == "S":
+                        self.__SaveGame()
+
                     elif MenuChoice == "Q":
                         self.__GameOver = True
                         print("\nThank you for playing!\n")
@@ -265,6 +268,7 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
             print("File not loaded")
             return False
 
+
     def __LoadLocks(self):
         FileName = "locks.txt"
         self.__Locks = []
@@ -281,6 +285,32 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                     LineFromFile = f.readline().rstrip()
         except:
             print("File not loaded")
+
+    def __SaveGame(self):
+        FileName = "game1.txt"
+
+        Contents = f"""{self.__Score}
+{self.__CurrentLock.GetChallengesAsString()}
+{self.__CurrentLock.GetChallengesMetAsString()}"""
+
+        for Collection in [self.__Hand, self.__Sequence, self.__Discard, self.__Deck]:
+            CollectionString = "\n"
+            for C in range(1, Collection.GetNumberOfCards()):
+                CardDesc = Collection.GetCardDescriptionAt(C)
+                CardNum = Collection.GetCardNumberAt(C)
+                CollectionString += f"{CardDesc} {CardNum},"
+            if CollectionString != "\n":
+                CollectionString = CollectionString[:-1:] # rid trailing ,
+            Contents += CollectionString
+
+
+        try:
+            with open(FileName, "w+") as f:
+                f.write(Contents)
+        except:
+            print("\nFailed to Save Game.\n")
+            return
+        print("\nSuccessfully Saved.\n")
 
     def __GetRandomLock(self):
         return self.__Locks[random.randint(0, len(self.__Locks) - 1)]
@@ -399,7 +429,7 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
             choices += ", (P)eek"
         if not self.__MulliganUsed:
             choices += ", (M)ulligan"
-        choices += ", (Q)uit:> "
+        choices += ", (Q)uit, (S)ave:> "
 
         return input(choices).upper()
 
@@ -554,6 +584,30 @@ class Lock():
     def GetNumberOfChallenges(self):
         return len(self._Challenges)
 
+    def GetChallengesAsString(self):
+        ChallengeAsString = ""
+        for Challenge in self._Challenges:
+            for Condition in Challenge.GetCondition():
+                ChallengeAsString += f"{Condition},"
+            ChallengeAsString = ChallengeAsString[:-1:] # rid trailing ,
+            ChallengeAsString += ";"
+        if ChallengeAsString != "":
+            ChallengeAsString = ChallengeAsString[:-1:] # rid trailing ;
+
+        return ChallengeAsString
+
+    def GetChallengesMetAsString(self):
+        MetAsString = ""
+        for Challenge in self._Challenges:
+            if Challenge.GetMet():
+                MetAsString += "Y"
+            else:
+                MetAsString += "N"
+            MetAsString += ";"
+        if MetAsString != "":
+            MetAsString = MetAsString[:-1:] # rid trailing ;
+
+        return MetAsString
 
 class Card():
     _NextCardNumber = 0

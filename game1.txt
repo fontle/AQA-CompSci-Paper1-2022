@@ -1,7 +1,7 @@
-8
-P a,F a,P a;K b;P c,F b,P a;K a
-N;Y;N;Y
-P a 1,F a 16,P b 2,K a 19,P a 4
-K b 20,F c 30,K a 31
+0
+F c,P c,F c
+N
+K b 31,P c 8,F a 21,F a 15
 
-P a 7,Dif 34,P a 10,P a 13,K a 25,K b 26,K b 32,K c 21,K c 27,K c 33,P b 5,P b 8,P b 11,P b 14,P c 3,P c 6,P c 9,P c 12,P c 15,F a 22,F a 28,F b 17,F b 23,F b 29,F c 18,F c 24,Dif 35,Dif 36,Dif 37,Dif 38
+
+Gen 47,F c 29,K b 19,Gen 42,P b 7,K c 26,P a 6,F c 23,Dif 37,P c 11,P c 2,Dif 38,Gen 45,P b 13,F c 17,K m 34,Gen 43,K a 24,P c 5,P b 4,P a 0,Dif 36,Gen 46,P c 14,Gen 48,P a 12,Dif 39,Gen 41,P a 9,K c 20,P b 1,F m 35,Dif 40,F a 27,Gen 44,K c 32,K a 18,F b 16,K b 25,K a 30,Gen 50,F b 22,P b 10,Gen 49,P m 33
