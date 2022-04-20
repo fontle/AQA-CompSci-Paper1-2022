@@ -26,6 +26,7 @@ class Breakthrough():
         self.__PeekUsed = False
         self.__MulliganUsed = False
         self.__Credits = 10
+        self.__BonusPool = 0
         self.__LoadLocks()
 
     def PlayGame(self):
@@ -39,6 +40,7 @@ class Breakthrough():
                     print()
                     print("Current score:", self.__Score)
                     print("Credits:", self.__Credits)
+                    print("Current Bonus:", self.__BonusPool)
                     print(self.__CurrentLock.GetLockDetails(self.__Sequence.GetCardDescriptions()))
                     print(self.__Sequence.GetCardDisplay())
                     print("Cards in Deck: ", self.__Deck.GetNumberOfCards())
@@ -82,7 +84,7 @@ class Breakthrough():
                             self.__CreateStandardDeck()
                             self.__Deck.Shuffle()
                             # Deal cards to player
-                            for Count in range(5):
+                            for _ in range(5):
                                 self.__MoveCard(self.__Deck, self.__Hand,
                                                 self.__Deck.GetCardNumberAt(0))
                             # Add difficulties to pack
@@ -171,6 +173,7 @@ class Breakthrough():
             if self.__Hand.GetCardDescriptionAt(
                     CardChoice - 1)[0] != self.__Sequence.GetCardDescriptionAt(
                         self.__Sequence.GetNumberOfCards() - 1)[0]:
+
                 self.__Score += self.__MoveCard(
                     self.__Hand, self.__Sequence,
                     self.__Hand.GetCardNumberAt(CardChoice - 1))
@@ -191,10 +194,18 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
                 self.__Hand, self.__Sequence,
                 self.__Hand.GetCardNumberAt(CardChoice - 1))
             self.__GetCardFromDeck(CardChoice)
+
+        if self.__CurrentLock.IsPartial(self.__Sequence):
+            self.__BonusPool += 5
+        else:
+            self.__BonusPool = 0
+
         if self.__CheckIfLockChallengeMet():
             print()
             print("A challenge on the lock has been met.")
             print()
+            self.__Score += self.__BonusPool
+            self.__BonusPool = 0
             self.__Score += 5
 
     def __CheckIfLockChallengeMet(self):
@@ -302,7 +313,6 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
             if CollectionString != "\n":
                 CollectionString = CollectionString[:-1:] # rid trailing ,
             Contents += CollectionString
-
 
         try:
             with open(FileName, "w+") as f:
@@ -525,6 +535,8 @@ class Challenge():
 class Lock():
     def __init__(self):
         self._Challenges = []
+        self.__PartialCondition = None
+        self.__PartialPosition = 0
 
     def AddChallenge(self, Condition):
         C = Challenge()
@@ -537,6 +549,37 @@ class Lock():
             ConditionAsString += C[Pos] + ", "
         ConditionAsString += C[len(C) - 1]
         return ConditionAsString
+
+    def IsPartial(self, Sequence):
+
+        LastCard = Sequence.GetCardDescriptionAt(-1)
+
+        # If there is no challenge, try and find one
+        if self.__PartialCondition == None:
+            NonMetChallenges = [C for C in self._Challenges if not C.GetMet()]
+            for Challenge in NonMetChallenges:
+                Condition = Challenge.GetCondition()
+                if Condition[0] == LastCard:
+                    self.__PartialCondition = Condition
+                    self.__PartialPosition += 1
+                    return True
+
+        # Otherwise there must be a partially met challenge...
+        else:
+            try:
+                ConditionNeeded = self.__PartialCondition[self.__PartialPosition]
+            # IndexError occurs when condition is only one long
+            except IndexError:
+                return False
+
+            if LastCard == ConditionNeeded:
+                self.__PartialPosition += 1
+                return True
+
+        # If there is no challenge or has failed, reset bonus parameters
+        self.__PartialCondition = None
+        self.__PartialPosition = 0
+        return False
 
     def GetLockDetails(self, Sequence):
 
