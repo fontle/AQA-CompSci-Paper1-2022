@@ -1,0 +1,7 @@
+Player Score (Breakthrough.__Score)
+Conditions of all challenges in current lock
+Boolean (Y or N) for whether each challenge in lock is met
+Hand (Cards are formated as F c 15, ... where [0:2] is toolkit is the card description, [3::] is the card number)
+Sequence
+Discard
+Deck

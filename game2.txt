@@ -1,0 +1,7 @@
+48
+K b,P b;F a
+N;N
+P c 8,K c 20,P b 10,P a 3
+
+
+Gen 48,Gen 42,P c 2,K m 34,Gen 49,K b 19,K b 31,F a 27,K a 18,F a 21,P b 1,P m 33,Dif 40,P a 9,F c 29,K m 52,F m 53,P b 13,Gen 41,Dif 37,P c 11,K c 32,P b 4,K a 24,P c 5,P c 14,K c 26,Gen 43,F b 16,P a 12,P a 6,Dif 38,F a 15,P m 51,Gen 47,K a 30,Dif 39,F b 28,F b 22,P a 0,F m 35,P b 7,Gen 50,K b 25,Gen 46,Dif 36,F c 23

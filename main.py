@@ -27,6 +27,7 @@ class Breakthrough():
         self.__MulliganUsed = False
         self.__Credits = 10
         self.__BonusPool = 0
+        self.__FinalLock = 0
         self.__LoadLocks()
 
     def PlayGame(self):
@@ -116,8 +117,52 @@ class Breakthrough():
         else:
             print("No locks in file.")
 
+    def __GenerateChallenge(self, CardsInPlay):
+        Condition = []
+        for x in range(3):
+
+            C = random.choice(list(CardsInPlay.keys()))
+            while C == "Gen" or C == "Dif":
+                C = random.choice(list(CardsInPlay.keys()))
+
+            Condition.append(C)
+            if CardsInPlay[C] == 1:
+                del CardsInPlay[C]
+            else:
+                CardsInPlay[C] -= 1
+        return Condition, CardsInPlay
+
+
+    def __GenerateSoluableLock(self):
+        CardDescriptions = self.__Hand.GetCardDescriptions() + self.__Deck.GetCardDescriptions()
+        CardsInPlay = {}
+
+        # Get card descriptions of those in play, and their amount
+        for Card in CardDescriptions:
+            if Card in CardsInPlay.keys() and (Card != "Gen" or Card != "Dif"):
+                CardsInPlay[Card] += 1
+            else:
+                CardsInPlay[Card] = 1
+
+        FinalLock = Lock()
+
+        # Add two challenges to final lock that can be solved
+        for _ in range(2):
+            Condition, CardsInPlay = self.__GenerateChallenge(CardsInPlay)
+            FinalLock.AddChallenge(Condition)
+
+        return FinalLock
+
+
     def __ProcessLockSolved(self):
         self.__Score += 10
+
+        # Then player has solved final lock, end game
+        if self.__FinalLock != 0:
+            print(f"You have solved the final lock. Your final score is: {self.__Score}")
+            self.__GameOver = True
+            return
+
         print("Lock has been solved.  Your score is now:", self.__Score)
         while self.__Discard.GetNumberOfCards() > 0:
             self.__MoveCard(self.__Discard, self.__Deck,
@@ -129,21 +174,36 @@ class Breakthrough():
             self.__Deck.AddCard(NewCard)
 
         self.__Deck.Shuffle()
-        self.__CurrentLock = self.__GetRandomLock()
+        # Check ten times whether new lock is soluable
+        for x in range(10):
+            NewLock = self.__GetRandomLock()
+            if NewLock.GetChallengesAsString() != self.__CurrentLock.GetChallengesAsString():
+                if NewLock.IsSoluable(self.__Hand, self.__Deck):
+                    self.__CurrentLock = NewLock
+                    return
+
+        print("\nFINAL LOCK\n")
+        self.__CurrentLock = self.__GenerateSoluableLock()
+        self.__FinalLock = 1
 
     def __CheckIfPlayerHasLost(self):
         if self.__Deck.GetNumberOfCards() == 0:
-            print(
-                "You have run out of cards in your deck.  Your final score is:",
-                self.__Score)
-            return True
+            # If deck is empty and there is a final, then it is still solvable with hand
+            if self.__FinalLock == 1:
+                self.__FinalLock = 2
+                return False
+            else:
+                print(
+                    "You have run out of cards in your deck.  Your final score is:",
+                    self.__Score)
+                return True
         else:
             return False
 
     def __SetupGame(self):
         Choice = input("Enter L to load a game from a file, anything else to play a new game:>").upper()
         if Choice == "L":
-            if not self.__LoadGame("game1.txt"):
+            if not self.__LoadGame("game2.txt"):
                 self.__GameOver = True
         else:
             self.__CreateStandardDeck()
@@ -298,7 +358,7 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
             print("File not loaded")
 
     def __SaveGame(self):
-        FileName = "game1.txt"
+        FileName = "game2.txt"
 
         Contents = f"""{self.__Score}
 {self.__CurrentLock.GetChallengesAsString()}
@@ -327,6 +387,7 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
 
     def __GetCardFromDeck(self, CardChoice):
         if self.__Deck.GetNumberOfCards() > 0:
+
             if self.__Deck.GetCardDescriptionAt(0) == "Dif":
                 print(self.__Deck.DisplayStats())
                 CurrentCard = self.__Deck.RemoveCard(
@@ -411,8 +472,9 @@ On top of previous card: {self.__Sequence.GetCardDescriptionAt(self.__Sequence.G
             else:
                 self.__MoveCard(self.__Deck, self.__Hand, self.__Deck.GetCardNumberAt(0))
 
-        if self.__Deck.GetNumberOfCards(
-        ) == 0 and self.__Hand.GetNumberOfCards() < 5:
+        if ((self.__Deck.GetNumberOfCards() == 0 and self.__Hand.GetNumberOfCards() < 5)
+            or self.__FinalLock == 2):
+
             self.__GameOver = True
 
     def __GetCardChoice(self):
@@ -550,7 +612,43 @@ class Lock():
         ConditionAsString += C[len(C) - 1]
         return ConditionAsString
 
-    def IsPartial(self, Sequence):
+    def IsSoluable(self, Hand, Deck) -> bool:
+
+        CardDescriptions = Hand.GetCardDescriptions() + Deck.GetCardDescriptions()
+        AllCards = {}
+        ChallengeCards = {}
+
+        # Get card descriptions of those in play, and their amount
+        for Card in CardDescriptions:
+            if Card in AllCards.keys():
+                AllCards[Card] += 1
+            else:
+                AllCards[Card] = 1
+
+        # Get card descriptions of all conditions,
+        # in current lock and their amount
+        for Challenge in self._Challenges:
+            for Condition in Challenge.GetCondition():
+                if Condition in ChallengeCards:
+                    ChallengeCards[Condition] += 1
+                else:
+                    ChallengeCards[Condition] = 1
+
+        # If the cards in play don't reach the requirements needed
+        # for current lock, then a KeyError is raised, this
+        # is caught and False is returned as lock not soluable
+        for (Condition, NumNeeded) in list(ChallengeCards.items()):
+            try:
+                if AllCards[Condition] < NumNeeded:
+                    raise KeyError
+            except KeyError:
+                return False
+
+        # Otherwise, lock must be soluable
+        return True
+
+
+    def IsPartial(self, Sequence) -> bool:
 
         LastCard = Sequence.GetCardDescriptionAt(-1)
 
@@ -772,7 +870,8 @@ class CardCollection():
     def GetNumberOfCards(self):
         return len(self._Cards)
 
-    def GetCardDescriptions(self): # Had to create for task 8 to achieve partially met
+    # Used in multiple tasks to easily get all descriptions
+    def GetCardDescriptions(self):
         return [self.GetCardDescriptionAt(x) for x in range(self.GetNumberOfCards())]
 
     def AddCard(self, C):
